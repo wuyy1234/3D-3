@@ -132,16 +132,14 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
 |    结束岸的魔鬼上船     |    船在结束岸，船有空位，结束岸有魔鬼   |  
 
 
-	
-
-	
-	
-	
-
-
 * 请将游戏中对象做成预制  
 * 在 GenGameObjects 中创建 长方形、正方形、球 及其色彩代表游戏中的对象。  
+  
+<img src="http://imglf4.nosdn.127.net/img/aHBnT05NNXVUK2p2NFZjWEpWYTkyOXpJWlpaV3F3MmZFZFFWajAxTGljODFnYk5tOG8zWTB3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+	
 * 使用 C# 集合类型 有效组织对象  
 * 整个游戏仅 主摄像机 和 一个 Empty 对象， 其他对象必须代码动态生成！！！ 。 整个游戏不许出现 Find 游戏对象， SendMessage 这类突破程序结构的 通讯耦合 语句。 违背本条准则，不给分  
 * 请使用课件架构图编程，不接受非 MVC 结构程序  
 * 注意细节，例如：船未靠岸，牧师与魔鬼上下船运动中，均不能接受用户事件！  
+
+
