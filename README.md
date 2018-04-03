@@ -149,7 +149,7 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
 
 * 注意细节，例如：船未靠岸，牧师与魔鬼上下船运动中，均不能接受用户事件！  
 
-* 项目整体总结：   
+* 项目整体总结：  
   * 不足之处：  
     * MVC的区分并不是非常清晰，虽然分开了，但有些类似于GUI的显示并没有完全放在View中  
     * 整体视觉做得不好，时间不太够我来细化  
