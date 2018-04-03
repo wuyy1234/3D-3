@@ -123,9 +123,7 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
  
 | 玩家动作       | 条件    | 
 | --------   | -----:   | 
-|      开船   |  船在开始岸、船在结束岸、船上有人     |  
-|   船的左方下船      |    	船靠岸且船左方有人   |   
-|     船的右方下船    |  船靠岸且船右方有人     |   
+|      开船   |  船在开始岸、船在结束岸、船上有人     |     
 |    开始岸的牧师上船     |   	船在开始岸，船有空位，开始岸有牧师    |  
 |    开始岸的魔鬼上船     |    船在开始岸，船有空位，开始岸有魔鬼   |   
 |    结束岸的牧师上船     |    船在结束岸，船有空位，结束岸有牧师   |   
@@ -138,8 +136,69 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
 <img src="http://imglf4.nosdn.127.net/img/aHBnT05NNXVUK2p2NFZjWEpWYTkyOXpJWlpaV3F3MmZFZFFWajAxTGljODFnYk5tOG8zWTB3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
 	
 * 使用 C# 集合类型 有效组织对象  
+ ```    
+ Stack<Character> boatStack;//使用stack来存储船上的物体	
+```    
+
 * 整个游戏仅 主摄像机 和 一个 Empty 对象， 其他对象必须代码动态生成！！！ 。 整个游戏不许出现 Find 游戏对象， SendMessage 这类突破程序结构的 通讯耦合 语句。 违背本条准则，不给分  
 * 请使用课件架构图编程，不接受非 MVC 结构程序  
+
+下面是程序总体框架，包括 View ,Controller ,Model  ,游戏对象只包括了Camera和Empty的GameObject，其余对象通过程序运行过程中实例化产生。
+
+<img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2cvN0s1YUpBT1V6WEIwM0Q4eGlkdVVaZU56VWVseWIyK0lxVTFlY3QwcWN3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+
 * 注意细节，例如：船未靠岸，牧师与魔鬼上下船运动中，均不能接受用户事件！  
+
+* 项目整体总结：   
+  * 不足之处：  
+    * MVC的区分并不是非常清晰，虽然分开了，但有些类似于GUI的显示并没有完全放在View中  
+    * 整体视觉做得不好，时间不太够我来细化  
+    * 最重要的，框架一开始没有整理好，以至于我思路完全乱了，各个类的函数相互调用和参数传递乱糟糟的，后来有UML重新整理了整体框架逐渐恢复  
+    * 实例化对象数组的时候，一开始 忘了给对象数组  new 申请空间，记住要new两次，如下  
+    
+     ```   
+    characters = new Character[6];  
+    for(int i=0;i<3;i++){  
+      characters [i] = new Character ("priest",i);  
+      characters [i+3] = new Character ("devil",i);  
+    }
+     ```    
+    * 移动的函数应该放到 void  Update() 里面,如下：  
+    
+     ```    
+     	void Update(){  
+     		boat.transform.position = Vector3.MoveTowards (boat.transform.position, rightCoast, BoatSpeed*Time.deltaTime);  
+		if(boat.transform.position==rightCoast){  
+			isMoving = false;  
+			BoatStatus = 1;  
+		}
+     }
+     ```  
+    * 实例化包含有 void Start() void Update() 之类的MonoBehaviour特性的函数时，不能够像下面修改：  
+      错误示例：  
+     ```    
+	public class Boat :MonoBehaviour（){}  
+	Boat boat=new Boat();  
+     ```  
+      正确示例：  
+     ```    
+	public class Boat :MonoBehaviour（){}  
+	Boat boat=gameObject.AddComponent<Boat>() as Boat;//实例化  
+     ```  
+
+* 游戏截图：  
+<img src="http://imglf5.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZV2pBcTlDZVFOZUU4UTkzRGZXKzZxWGFXUC9xbk1IenFBPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZYlFITjVDaDhxYWpOTnF2VlgyQTNNVWZRUXczWlFjeHRBPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZYzRHR0FDdjIzYkF2WnhqSFVSaFJmUjFvdFZ0ZDJQeFhBPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf5.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZWm42dWxyMUpLekgwcmlZalhDRW53ZUpmcWkrSCtGRUZnPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+
+* UML整体框架（完整代码见文末）：  
+
+<img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZVEltek9mcC9DN0RaNGRrTENnbEo5b1gxWERhd1l5MGVBPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf3.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZUWRKa3owU2hMU1JxK0MzZmdMYWFyeGt5OG40ejd5U2JnPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf4.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZV2tvL2ZacHNxWFd6SVMxVlFxN0F0dDdCTHZPM0FGNVB3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+<img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZZTZkbDZkemZYVXBOUWpwOWUwWEdCd0VacC9BTWY3THd3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
+
+完整代码
 
 
