@@ -156,35 +156,35 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
     * 最重要的，框架一开始没有整理好，以至于我思路完全乱了，各个类的函数相互调用和参数传递乱糟糟的，后来有UML重新整理了整体框架逐渐恢复  
     * 实例化对象数组的时候，一开始 忘了给对象数组  new 申请空间，记住要new两次，如下  
     
-     ```   
-    characters = new Character[6];  
-    for(int i=0;i<3;i++){  
-      characters [i] = new Character ("priest",i);  
-      characters [i+3] = new Character ("devil",i);  
-    }
-     ```    
+```    
+characters = new Character[6];  
+for(int i=0;i<3;i++){  
+	characters [i] = new Character ("priest",i);  
+	characters [i+3] = new Character ("devil",i);  
+}
+```    
     * 移动的函数应该放到 void  Update() 里面,如下：  
     
-     ```    
-     	void Update(){  
-     		boat.transform.position = Vector3.MoveTowards (boat.transform.position, rightCoast, BoatSpeed*Time.deltaTime);  
-		if(boat.transform.position==rightCoast){  
-			isMoving = false;  
-			BoatStatus = 1;  
-		}
-     }
-     ```  
+```    
+void Update(){  
+	boat.transform.position = Vector3.MoveTowards (boat.transform.position, rightCoast, BoatSpeed*Time.deltaTime);  
+	if(boat.transform.position==rightCoast){  
+		isMoving = false;  
+		BoatStatus = 1;  
+	}
+}
+```    
     * 实例化包含有 void Start() void Update() 之类的MonoBehaviour特性的函数时，不能够像下面修改：  
       错误示例：  
-     ```    
-	public class Boat :MonoBehaviour（){}  
-	Boat boat=new Boat();  
-     ```  
+```    
+public class Boat :MonoBehaviour（){}  
+Boat boat=new Boat();  
+```    
       正确示例：  
-     ```    
-	public class Boat :MonoBehaviour（){}  
-	Boat boat=gameObject.AddComponent<Boat>() as Boat;//实例化  
-     ```  
+```    
+public class Boat :MonoBehaviour（){}  
+Boat boat=gameObject.AddComponent<Boat>() as Boat;//实例化  
+```    
 
 * 游戏截图：  
 <img src="http://imglf5.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZV2pBcTlDZVFOZUU4UTkzRGZXKzZxWGFXUC9xbk1IenFBPT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
@@ -199,6 +199,307 @@ Priests and Devils is a puzzle game in which you will help the Priests and Devil
 <img src="http://imglf4.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZV2tvL2ZacHNxWFd6SVMxVlFxN0F0dDdCTHZPM0FGNVB3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
 <img src="http://imglf6.nosdn.127.net/img/aHBnT05NNXVUK2paaCt1bkVtT1RZZTZkbDZkemZYVXBOUWpwOWUwWEdCd0VacC9BTWY3THd3PT0.png?imageView&thumbnail=500x0&quality=96&stripmeta=0"  />  
 
-完整代码
+* 完整代码：  
+Model:  
+```    
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Com.Model;
+
+namespace Com.Model{
+	public class Character {
+		public GameObject characterObject;
+		public int status;
+		public int tag;//用来标记是第几个牧师或鬼
+		public string name;
+		public Character(){
+		}
+		public Character(string type,int i){
+			if (type == "devil") {
+				characterObject = GameObject.Instantiate (Resources.Load ("Prefabs/Devil", typeof(GameObject)), new Vector3 ((5.8f + i), 2, 0), Quaternion.identity, null) as GameObject;
+				name="devil";
+				status = 1;
+				tag = i;
+			} else if (type == "priest") {
+				characterObject = GameObject.Instantiate(Resources.Load ("Prefabs/Priest", typeof(GameObject)),new Vector3((5.8f+i),1,0), Quaternion.identity,null) as GameObject ;
+				name="priest";
+				status = 1;
+				tag = i;
+			}
+		}
+	}
+	public class Boat :MonoBehaviour  {
+		public GameObject boat;
+		private int BoatSpeed =20;
+		Vector3 rightCoast = new Vector3 (3,0, 0);
+		Vector3 leftCoast = new Vector3 (-0.5f, 0, 0);
+		private int BoatStatus;//-1  左岸，1  右岸
+		private bool isMoving;
+
+		Stack<Character> boatStack;
+
+		void Start(){
+			boat=GameObject.Instantiate(Resources.Load ("Prefabs/Boat", typeof(GameObject)),new Vector3(3,0,0), Quaternion.identity,null) as GameObject ;
+			BoatStatus=1;
+			boatStack = new Stack<Character> ();
+			isMoving=false;
+		}
+
+		public int GetPassengerNum(){
+			return boatStack.Count;
+		}
+		public void toBoat(string characterType,Character[] characters){//上船
+			if(boatStack.Count>=2){
+				Debug.Log ("the boat is full");
+				return;
+			}
+			else if (characterType == "priest") {
+				for (int i = 0; i < 3; i++) {
+					if (characters [i].status == BoatStatus) {//在船的同一侧
+						if (boatStack.Count == 0) {
+							characters [i].characterObject.transform.position = boat.transform.position + new Vector3 (-1, 1, 0);
+
+						} else {//左边有乘客
+							characters [i].characterObject.transform.position = boat.transform.position + new Vector3 (0, 1, 0);
+						}
+						characters [i].characterObject.transform.parent = boat.transform;
+						characters [i].status = 0;//修改状态在船上
+						boatStack.Push (characters [i]);
+						return;
+					}
+				}
+			}
+			else if(characterType == "devil"){
+				for (int i = 3; i < 6; i++) {
+					if (characters [i].status == BoatStatus) {//在船的同一侧
+						if (boatStack.Count == 0) {
+							characters [i].characterObject.transform.position = boat.transform.position + new Vector3 (-1, 1, 0);
+
+						} else {//左边有乘客
+							characters [i].characterObject.transform.position = boat.transform.position + new Vector3 (0, 1, 0);
+						}
+						characters [i].characterObject.transform.parent = boat.transform;
+						characters [i].status = 0;//修改状态在船上
+						boatStack.Push (characters [i]);
+						return;
+					}
+				}	
+			}
+		}
+		public void fromBoat(string characterType,Character[] characters){//下船
+			if (boatStack.Count <= 0) {
+				Debug.Log ("the boat is empty");
+				return;
+			} 
+			else if (characterType == "priest") {
+				for (int i = 0; i < 3; i++) {
+					if (characters [i].status == 0) {//把它从船上赶下来
+						if (BoatStatus == -1) {//左岸下船
+							characters[i].characterObject.transform.position=new Vector3( (-6+i),1,0 );
+							characters [i].status = -1;
+						} 
+						else if (BoatStatus == 1) {
+							characters[i].characterObject.transform.position=new Vector3( (5.8f+i),1,0 );
+							characters [i].status = 1;
+						}
+						characters [i].characterObject.transform.parent = null;
+						boatStack.Pop ();
+						return;
+					}
+				}
+			}
+			else if (characterType == "devil") {
+				for (int i = 0; i < 3; i++) {
+					if (characters [i+3].status == 0) {//把它从船上赶下来
+						if (BoatStatus == -1) {//左岸下船
+							characters[i+3].characterObject.transform.position=new Vector3( (-6+i),2,0 );
+							characters [i+3].status = -1;
+						} 
+						else if (BoatStatus == 1) {
+							characters[i+3].characterObject.transform.position=new Vector3( (5.8f+i),2,0 );
+							characters [i+3].status = 1;
+						}
+						characters [i+3].characterObject.transform.parent = null;
+						boatStack.Pop ();
+						return;
+					}
+				}
+			}
+		}	
+		void Update(){
+			//Debug.Log ("update");
+			if (isMoving) {
+				Debug.Log ("isMoving  Update");
+				if (BoatStatus == -1 && boatStack.Count!=0) {
+					boat.transform.position = Vector3.MoveTowards (boat.transform.position, rightCoast, BoatSpeed*Time.deltaTime);
+					//Debug.Log ("moveBoat");
+					if(boat.transform.position==rightCoast){
+						isMoving = false;
+						BoatStatus = 1;
+					}
+				}
+				else if(BoatStatus == 1){
+					boat.transform.position = Vector3.MoveTowards (boat.transform.position, leftCoast, BoatSpeed*Time.deltaTime );
+
+					if(boat.transform.position==leftCoast){
+						isMoving = false;
+						BoatStatus = -1;
+					}
+				}
+			}
+		}
+
+		public void MoveBoat(){
+			isMoving = true;
+		}
+
+		public int checkWin(Character[] characters){//判断输赢 ,-1为输，1为赢
+			int leftDevil=0;
+			int rightDevil = 0;
+			int leftPriest = 0;
+			int rightPriest = 0;
+			int boatPriest = 0;
+			int boatDevil = 0;
+
+			for (int i = 0; i < 6; i++) {
+				if (characters [i].name == "devil" && characters [i].status == 1) {//鬼在右边
+					rightDevil++;
+				} else if (characters [i].name == "devil" && characters [i].status == 0) {//鬼在船上
+					boatDevil++;
+				} else if (characters [i].name == "devil" && characters [i].status == -1) {//鬼在左边
+					leftDevil++;
+				} else if (characters [i].name == "priest" && characters [i].status == 1) {//牧师在右边
+					rightPriest++;
+				} else if (characters [i].name == "priest" && characters [i].status == 0) {//牧师在船上
+					boatPriest++;
+				}
+				else if (characters [i].name == "priest" && characters [i].status == -1) {
+					leftPriest ++;
+				}
+			}
+			if (BoatStatus == 1) {
+				if (((rightDevil + boatDevil) > (rightPriest + boatPriest)) && (rightPriest + boatPriest) != 0) {
+					return -1;
+				}
+				if (leftDevil > leftPriest && leftPriest != 0) {
+					return -1;
+				}
+			}
+			if(BoatStatus == -1) {
+				if (rightDevil > rightPriest && rightPriest != 0) {
+					return -1;
+				}
+				if ((leftDevil + boatDevil) > (leftPriest + boatPriest) && (leftPriest + boatPriest) != 0) {
+					return - 1;
+				}
+			}
+			if (leftDevil == 3 && leftPriest == 3) {
+				return 1;
+			}
+			return 0;
+		}
+	}
+	public class Coast{//用coast代替shore
+		GameObject leftCoast;
+		GameObject rightCoast;
+		public Coast(){
+			leftCoast =GameObject.Instantiate(Resources.Load ("Prefabs/Shore", typeof(GameObject)),new Vector3(8.2f,-0.5f,0), Quaternion.identity,null) as GameObject ;
+			rightCoast=GameObject.Instantiate(Resources.Load ("Prefabs/Shore", typeof(GameObject)),new Vector3(-6,-0.5f,0), Quaternion.identity,null) as GameObject ;
+		}
+	}
+}
+
+```    
+View:  
+```    
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Com.Model;
+public class View : MonoBehaviour {
+	GUIStyle style=new GUIStyle();
+	void Start(){
+		style.fontSize = 40;
+	}
+	void OnGUI(){
+		GUI.Label (new Rect (Screen.width / 2-100, Screen.height / 2 - 250, 100, 50), "Priest and Devil",style);
+	}
+}
+```    
+Controller:  
+```    
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Com.Model;
+
+public class Controller : MonoBehaviour {
+	View view;
+	GUIStyle buttonStyle;
+	GUIStyle style=new GUIStyle();
+	private int status;
+	Boat boat;
+	Coast coast;
+	Character[] characters;
+
+	void Start () {
+		view = gameObject.AddComponent <View>() as View;
+		boat = gameObject.AddComponent<Boat>() as Boat;//实例化
+		style.fontSize = 40;
+	}
+
+	void Awake(){
+		Debug.Log ("Controller Awake");
+		coast = new Coast ();
+		/*GameObject a = new GameObject ();
+		a= GameObject.Instantiate (Resources.Load ("Prefabs/Devil", typeof(GameObject)), new Vector3 ((4f), 2, 0), Quaternion.identity, null) as GameObject;
+		Debug.Log (a);
+		*/
+		characters = new Character[6];
+		for(int i=0;i<3;i++){
+			characters [i] = new Character ("priest",i);
+			characters [i+3] = new Character ("devil",i);
+		}
+	}
+	/*int get_status(){
+		return status;
+	}
+	void Update(){
+		
+	}*/
+	void OnGUI(){
+		if (boat.checkWin (characters) == 1) {//赢
+			GUI.Label (new Rect (Screen.width / 2, Screen.height / 2 + 50, 100, 50), "win",style);
+		}
+		if (boat.checkWin (characters) == -1) {//输
+			GUI.Label (new Rect (Screen.width / 2, Screen.height / 2 +50, 100, 50), "lose",style);
+		}
 
 
+		if (GUI.Button (new Rect (Screen.width / 2 + 250, Screen.height / 2 - 200, 100, 50), "牧师(圆）上")) {
+			boat.toBoat ("priest", characters);
+			//priest.MovePriest ("to",boat);
+		}
+		if (GUI.Button (new Rect (Screen.width/2+150,Screen.height/2-200 ,100, 50), "魔鬼（方）上")) {
+			boat.toBoat ("devil", characters);
+
+		}
+
+		if (GUI.Button (new Rect (Screen.width/2-250,Screen.height/2-200 ,100, 50), "牧师(圆）下")) {
+			boat.fromBoat ("priest", characters);
+			//priest.MovePriest ("from",boat);
+		}
+		if (GUI.Button (new Rect (Screen.width/2-150,Screen.height/2-200,100, 50), "魔鬼（方）下")) {
+			boat.fromBoat("devil", characters);
+
+		}
+
+		if ( GUI.Button (new Rect (Screen.width/2,Screen.height/2-200 ,100, 50), "开船") ) {
+			//Debug.Log ("Boat");
+			boat.MoveBoat ();
+		} 
+	}
+}
+
+```    
